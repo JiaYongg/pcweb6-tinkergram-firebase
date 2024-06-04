@@ -1,23 +1,35 @@
 import React, { useEffect, useState } from "react";
 import { Button, Container, Form, Nav, Navbar } from "react-bootstrap";
-import { useParams } from "react-router-dom";
+import { useNavigate,useParams } from "react-router-dom";
+import { useAuthState} from "react-firebase-hooks/auth";
+import { db, auth} from "../firebase";
+import { doc, getDoc, updateDoc} from "firebase/firestore";
 
 export default function PostPageUpdate() {
   const params = useParams();
   const id = params.id;
   const [caption, setCaption] = useState("");
   const [image, setImage] = useState("");
+  const [user, loading] = useAuthState(auth);
+  const navigate = useNavigate();
 
-  async function updatePost() {}
+  async function updatePost() {
+    await updateDoc(doc(db, "posts", id), {caption, image});
+    navigate("/post/"+id);
+  }
 
   async function getPost(id) {
-    setCaption("");
-    setImage("");
+    const postDocument = await getDoc(doc(db, "posts", id));
+    const post = postDocument.data();
+    setCaption(post.caption);
+    setImage(post.image);
   }
 
   useEffect(() => {
+    if (loading) return;
+    if (!user) return navigate("/login");
     getPost(id);
-  }, [id]);
+  }, [id, user, loading, navigate]);
 
   return (
     <div>
@@ -37,7 +49,7 @@ export default function PostPageUpdate() {
             <Form.Label>Caption</Form.Label>
             <Form.Control
               type="text"
-              placeholder="Lovely day"
+              placeholder="Enter caption"
               value={caption}
               onChange={(text) => setCaption(text.target.value)}
             />
