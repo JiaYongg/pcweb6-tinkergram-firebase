@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 import { Container, Image, Nav, Navbar, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import { collection, getDocs} from "firebase/firestore";
+import { db } from "../firebase";
 
 export default function PostPageHome() {
   const [posts, setPosts] = useState([]);
 
    async function getAllPosts() {
-    setPosts([]);
+    const query = await getDocs(collection(db, "posts"));
+    const posts = query.docs.map(doc => {
+      return { id: doc.id, ...doc.data() };
+    });
+    setPosts(posts);
   }
 
   useEffect(() => {
